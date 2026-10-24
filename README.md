@@ -1,102 +1,125 @@
-# Linux Software RAID1 Failure & Recovery Lab
+# Linux RAID1 Failure Simulation & Recovery Lab
 
-**Independent technical lab | Ubuntu Linux · Oracle VirtualBox · mdadm · ext4 · SHA-256**
+**Hands-on Linux Storage Operations Portfolio**  
+**Date:** 24 October 2026 (WIB) · **Platform:** Ubuntu Linux on Oracle VirtualBox · **Tools:** mdadm, lsblk, ext4, sha256sum
 
-> **Scope:** Controlled Linux **software RAID in a virtual machine**. This is not a physical server repair, a hardware RAID controller exercise, a production incident, or an AWS-operated environment.
+> **Scope and authenticity:** This is an **independent virtual-machine lab** using Linux **software RAID1**. The failure was deliberately injected with `mdadm --fail`. It is **not** a physical drive replacement, hardware RAID procedure, production incident, or AWS infrastructure operation.
 
-## Overview
+## Project at a glance
 
-Configured a two-member RAID1 array on dedicated VirtualBox disks, formatted the resulting array as ext4, created a 10 MiB test file and confirmed its SHA-256 baseline. Intentionally marked one RAID member faulty, identified the degraded array, removed the faulty member and added a separate replacement virtual disk. Final diagnostics confirmed a clean two-member array and an unchanged test-file checksum.
+| Test | Observed result |
+|---|---|
+| Create two-member RAID1 | `/dev/md0` with `/dev/sdb` + `/dev/sdc` — `[2/2] [UU]` |
+| Establish test-data baseline | 10 MiB file and saved SHA-256 manifest; verification `OK` |
+| Simulate a member failure | `/dev/sdb` flagged faulty; array became `clean, degraded` — `[2/1] [_U]` |
+| Replace failed virtual member | Removed `/dev/sdb`, added unused `/dev/sdd` |
+| Verify recovery | `clean`; `/dev/sdc` + `/dev/sdd` active; `[2/2] [UU]`; 0 failed |
+| Check sample-file integrity | Baseline manifest verification after recovery: **`OK`** |
+| Confirm usable filesystem | `/dev/md0` formatted ext4, mounted at `/mnt/raid1-lab` |
 
-## Learning objectives
+**Outcome:** RAID1 redundancy was restored in the VM and the tested file still matched its pre-failure checksum. This establishes **sample-file integrity**, not validation of every filesystem block or proof of physical-disk reliability.
 
-- Distinguish the OS disk from dedicated training disks before storage changes.
-- Create and inspect Linux software RAID1 with `mdadm`.
-- Recognize healthy `[UU]` versus degraded `[_U]` states.
-- Preserve the surviving array member and restore redundancy with a replacement disk.
-- Collect meaningful verification evidence and document the limits of a simulation.
+## Real screenshots from the lab
 
-## Lab environment
+**1. RAID recovery and checksum verification**
 
-| Component | Configuration |
+![Original Ubuntu terminal screenshot showing RAID1 clean with 2 active devices and SHA-256 OK](evidence/03-recovered-raid1.png)
+
+**2. Mounted ext4 filesystem and SHA-256 verification**
+
+![Original Ubuntu terminal screenshot showing the ext4 mount on md0 and test file checksum OK](evidence/04-filesystem-sha256-verification.png)
+
+See the [evidence inventory](evidence/README.md) for provenance and a distinction between original screenshots and transcribed earlier checkpoints.
+
+## Environment and storage layout
+
+| Component | Lab configuration |
 |---|---|
 | Hypervisor | Oracle VirtualBox |
-| Guest OS | Ubuntu 26.04 LTS (reported during the lab) |
-| Host | `ubuntu-bootcamp` |
-| RAID utility | `mdadm` 4.5 |
-| Array | `/dev/md0`, RAID1, metadata v1.2 |
-| Original members | `/dev/sdb` and `/dev/sdc` (1 GiB virtual disks) |
-| Replacement disk | `/dev/sdd` (1 GiB virtual disk) |
-| OS disk | `/dev/sda`, 30 GiB — explicitly **not modified** |
-| Filesystem and mount | ext4 on `/dev/md0`, mounted at `/mnt/raid1-lab` |
-| Test data | 10 MiB `raid1-test.bin` |
+| Guest OS | Ubuntu 26.04 LTS (as reported during the exercise) |
+| Hostname | `ubuntu-bootcamp` |
+| mdadm | Version 4.5; RAID metadata 1.2 |
+| OS disk | `/dev/sda`, ~30 GiB; not used as a RAID member |
+| Original RAID members | `/dev/sdb` and `/dev/sdc`, separate ~1 GiB virtual disks |
+| Replacement | `/dev/sdd`, a third ~1 GiB virtual disk |
+| Array | `/dev/md0` (RAID1) |
+| Filesystem | ext4 mounted at `/mnt/raid1-lab` |
+| Integrity sample | `raid1-test.bin`, 10 MiB, created on the array |
 
-**Safety:** These device names applied only to this particular VM session. Before using similar commands elsewhere, verify device identity with `lsblk` and ensure the targets are expendable.
+### Logical RAID topology
 
-## Procedure and observed results
+~~~text
+INITIAL (HEALTHY)           FAILURE (DEGRADED)        RECOVERED (HEALTHY)
+ /dev/md0 [UU]               /dev/md0 [_U]             /dev/md0 [UU]
+  /dev/sdb (active)           /dev/sdb (faulty)         /dev/sdd (active)
+  /dev/sdc (active)           /dev/sdc (active)         /dev/sdc (active)
+~~~
 
-### 1. Healthy baseline
+Device identifiers describe this specific VM, not universal Linux disk identities.
 
-Created `/dev/md0` from `/dev/sdb` and `/dev/sdc`. The initial array status was:
+## What was done
+
+### Stage 1 — Baseline and filesystem
+
+Inspected the virtual disks with `lsblk`, then created the software RAID1 array and checked the initial health:
 
 ~~~text
 md0 : active raid1 sdc[1] sdb[0]
       1057856 blocks super 1.2 [2/2] [UU]
 ~~~
 
-Formatted **only `/dev/md0`**, mounted it and confirmed `df -hT /mnt/raid1-lab` reported ext4 (983M filesystem; 915M available). Created a 10 MiB test file and verified a SHA-256 baseline stored **outside** the test array.
+Formatted only `/dev/md0` as ext4, mounted it, and created a 10 MiB test file. The SHA-256 manifest was saved in `/home/rafi/raid1-before.sha256`, outside the test array.
 
-### 2. Controlled member failure
+### Stage 2 — Controlled failure and diagnosis
 
-Ran `sudo mdadm --manage /dev/md0 --fail /dev/sdb` to mark one RAID member faulty. Observed:
+Deliberately marked `/dev/sdb` faulty using `mdadm`:
 
 ~~~text
 md0 : active raid1 sdc[1] sdb[0](F)
       1057856 blocks super 1.2 [2/1] [_U]
 ~~~
 
-`mdadm --detail` showed `State: clean, degraded`, one active and one failed device. The sole active member was `/dev/sdc`. **Redundancy was unavailable in this state.**
+`mdadm --detail` showed `clean, degraded`, one active device and one failed device. The remaining `/dev/sdc` member was intentionally preserved. At this point, the array had **no remaining mirror redundancy**.
 
-The intermediate SHA-256 check while degraded was requested, but its output was not visible in the supplied evidence; no claim of independently verified degraded-state checksum is made.
+### Stage 3 — Replacement and verification
 
-### 3. Replacement and recovery
-
-Removed the failed `/dev/sdb` member and added the unused `/dev/sdd` replacement. The final array status was:
+Removed the failed `/dev/sdb` member, added the unused `/dev/sdd` member, and inspected the recovered array:
 
 ~~~text
 md0 : active raid1 sdd[2] sdc[1]
       1057856 blocks super 1.2 [2/2] [UU]
 ~~~
 
-Final `mdadm --detail` reported `State: clean`, two active devices, zero failed devices, and both `/dev/sdc` and `/dev/sdd` in `active sync`. The test file was checked against the saved SHA-256 manifest:
+Final detailed diagnostics confirmed `State: clean`, `Active Devices: 2`, and `Failed Devices: 0`. The saved hash manifest produced:
 
 ~~~text
 /mnt/raid1-lab/raid1-test.bin: OK
 ~~~
 
-## Results and scope
+The later evidence capture also reported an ext4 filesystem of 983M and 905M available after the 10 MiB test write.
 
-| Verification | Result |
+## Evidence and technical documentation
+
+| Resource | Contents |
 |---|---|
-| Initial RAID1 two-member healthy state | Verified |
-| Degraded state after deliberate member failure | Verified |
-| Replacement disk joined; array returned to `[UU]` | Verified |
-| Test-file SHA-256 check before failure and after recovery | Verified |
-| SHA-256 check specifically while degraded | Not independently captured |
-| Reboot assembly and automatic mounting | Not tested |
-| Physical drive replacement or hardware RAID | Not tested |
+| [Incident report](incident-report.md) | Detection, sequence of actions, resolution and limitations |
+| [Command reference](commands.md) | Commands from the exercise, including destructive-operation warnings |
+| [Evidence inventory](evidence/README.md) | Original screenshots, transcripts and missing evidence |
+| [Terminal excerpts](evidence/observed-terminal-excerpts.md) | Earlier checkpoints transcribed from participant outputs |
+| [Final verification output](logs/recovery-verification-final.txt) | Console text copied from Ubuntu and provided for publication |
+| [Log provenance](logs/README.md) | What the uploaded log does and does not prove |
 
-The `[UU]` status indicates both RAID slots are active. The checksum demonstrates integrity **for the tested file**, not every block on the storage device.
+## Important limitations and lessons
 
-## Documentation
+- **RAID1 is availability/redundancy, not a backup.** Mirroring also propagates accidental file deletion and some data corruption.
+- `[UU]` shows two active members in this Linux software RAID; it does not replace application tests, disk-health tests, or monitoring.
+- SHA-256 `OK` checks **only** the 10 MiB test file against its saved baseline.
+- The exact degraded-phase SHA-256 output was **not captured**; no claim of an independently verified degraded-phase checksum is made.
+- No reboot/automatic RAID assembly, persistent mount configuration, SMART/BMC monitoring, controller diagnostics, physical drive swap or production change procedure was tested.
+- The removed `/dev/sdb` disk can still appear as `linux_raid_member` in `lsblk` because RAID metadata can remain even after removal from the active array. The active array membership is verified through `/proc/mdstat` and `mdadm --detail`.
 
-- [Incident report](incident-report.md) — controlled incident, diagnosis, recovery and limitations.
-- [Command reference](commands.md) — ordered commands with safety notes.
-- [Evidence inventory](evidence/README.md) — verified observations and screenshot availability.
-- [Logs](logs/README.md) — how to add original unedited terminal output.
+## Relevance to Data Center Operations
 
-## CV summary
+The exercise demonstrates entry-level, **VM-based practice** in storage inspection, controlled failure analysis, member replacement, integrity validation and incident documentation. Real data center procedures additionally require safety protocols, ticket/change control, asset and component identification, hardware-specific diagnostics, escalation and post-replacement checks.
 
-> Configured and troubleshot a Linux software RAID1 array using dedicated VirtualBox disks; simulated member failure, performed virtual disk replacement and recovery, and validated final array health and test-file integrity using mdadm and SHA-256.
-
-**Lab performed 24 October 2026 (WIB).** This documentation is based on terminal outputs and screenshots collected during the guided exercise, without representing virtual lab experience as production operations.
+**CV-ready description:** Configured and troubleshot a Linux software RAID1 array using dedicated VirtualBox disks; simulated member failure, performed virtual disk replacement and recovery, and validated final array health and test-file integrity with mdadm and SHA-256.
