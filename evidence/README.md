@@ -1,35 +1,38 @@
-# Evidence Inventory — Linux RAID1 Failure & Recovery
+# Evidence Inventory — RAID1 Failure & Recovery
 
-| Evidence | Actual availability | Verified observation |
+This directory separates **original terminal screenshots** from **transcribed observations**. Images are from the Ubuntu VM exercise on 24 October 2026; all failure and recovery operations were performed against virtual disks.
+
+## Original screenshots available in this repository
+
+| Screenshot | Direct link | What it demonstrates |
 |---|---|---|
-| Original healthy RAID1 checkpoint | Transcribed in [observed-terminal-excerpts.md](observed-terminal-excerpts.md) | `[2/2] [UU]`, /dev/sdb + /dev/sdc |
-| Original file checksum | Transcribed in excerpts | 10 MiB test file; baseline SHA-256 check `OK` |
-| ext4 mounted | Transcribed in excerpts | /dev/md0 mounted as ext4 at /mnt/raid1-lab |
-| Simulated failure | Transcribed in excerpts | `[2/1] [_U]`, `clean, degraded`, failed /dev/sdb |
-| Recovery and checksum | Transcribed in excerpts; **original screenshot available offline** | `[2/2] [UU]`, /dev/sdc + /dev/sdd, failed=0, checksum `OK` |
-| Unedited terminal log | **Not collected** | Pending optional fresh log capture |
+| Recovered RAID1 and SHA-256 check | [03-recovered-raid1.png](03-recovered-raid1.png) | Two active array members, clean state, zero failed devices, sample-file checksum `OK` |
+| ext4 filesystem and SHA-256 check | [04-filesystem-sha256-verification.png](04-filesystem-sha256-verification.png) | `/dev/md0` mounted at `/mnt/raid1-lab` as ext4; checksum `OK` |
 
-## Image files to upload
+### Recovery screenshot
 
-1. `03-recovered-raid1.png` — original final checkpoint screenshot, provided in the offline evidence ZIP.
-2. `01-healthy-raid1.png` — original screenshot from the conversation, **only if recoverable**.
-3. `02-degraded-raid1.png` — original screenshot from the conversation, **only if recoverable**.
+![Recovery screenshot: mdadm details, active members and integrity check](03-recovered-raid1.png)
 
-The listed PNGs are **not currently in this GitHub folder**. Do not present the transcript excerpts as original machine-generated logs or create artificial images to fill gaps. Repeating failure injection solely for screenshots is unnecessary.
+### Filesystem screenshot
 
-## Optional live log from Ubuntu
+![Filesystem screenshot: ext4 filesystem and integrity check](04-filesystem-sha256-verification.png)
 
-```bash
-mkdir -p ~/aws-dco-evidence
-{
-  date -Is
-  cat /proc/mdstat
-  sudo mdadm --detail /dev/md0
-  df -hT /mnt/raid1-lab
-  sha256sum -c ~/raid1-before.sha256
-} | tee ~/aws-dco-evidence/recovery-verification.txt
-```
+## Other evidence available
 
-If you run this, upload the unedited resulting file to `logs/recovery-verification.txt`. These commands are observational, not changes to RAID membership.
+| Evidence | Source | Status |
+|---|---|---|
+| Initial healthy RAID1 `[UU]` | [Earlier terminal excerpts](observed-terminal-excerpts.md) | Documented transcript; original image not uploaded |
+| Initial 10 MiB test and checksum | [Earlier terminal excerpts](observed-terminal-excerpts.md) | Documented transcript and known baseline hash |
+| Degraded RAID1 `[_U]` | [Earlier terminal excerpts](observed-terminal-excerpts.md) | Documented transcript; original image not uploaded |
+| Final RAID health + disk layout + mounted filesystem + checksum | [Final captured output](../logs/recovery-verification-final.txt) | File contains text copied from actual Ubuntu terminal output into chat, then committed to GitHub |
+| SHA-256 specifically during degraded state | No preserved result | **Not independently verified** |
 
-**Privacy:** Check images and logs for secrets before making them public. The reviewed final screenshot exposes the local VM username, hostname and array UUID but no visible password or token.
+## Integrity and provenance notes
+
+- The two PNGs above are original screenshots supplied by the lab participant and uploaded to GitHub, not generated illustrations.
+- [Earlier terminal excerpts](observed-terminal-excerpts.md) are **transcriptions from conversation evidence**, not raw files collected via terminal logging.
+- The final text log was copied from terminal output into the conversation and uploaded without deliberately removing repeated lines. It is **not a verified byte-for-byte transfer** of the file residing in the VM, and it does not contain the full execution history.
+- The log includes a repeated filesystem-and-checksum block because the output was appended twice during evidence collection.
+- The host, local username and RAID identifiers visible in screenshots are lab information. No passwords or access tokens were visible in the inspected evidence.
+
+Additional screenshots of the pre-failure or degraded stage should be uploaded **only if the originals are recovered**. No replacement evidence should be fabricated.
