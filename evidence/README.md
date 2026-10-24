@@ -1,21 +1,35 @@
-# Evidence Inventory
+# Evidence Inventory — Linux RAID1 Failure & Recovery
 
-## Observations verified during the lab
-
-| Stage | Observed terminal evidence | Availability |
+| Evidence | Actual availability | Verified observation |
 |---|---|---|
-| Healthy baseline | `[2/2] [UU]`, original members `/dev/sdb` and `/dev/sdc` | Visible in conversation; screenshot not yet added to repository |
-| Initial integrity | 10 MiB file; `sha256sum -c` returned `OK` | Visible in conversation; screenshot not yet added |
-| Degraded state | `[2/1] [_U]`, `clean, degraded`, `/dev/sdb` marked faulty | Visible in conversation; screenshot not yet added |
-| Recovered state | `[2/2] [UU]`, `clean`, active `/dev/sdc` + `/dev/sdd`, zero failed | Screenshot provided in conversation |
-| Final file integrity | `raid1-test.bin: OK` | Same final screenshot |
+| Original healthy RAID1 checkpoint | Transcribed in [observed-terminal-excerpts.md](observed-terminal-excerpts.md) | `[2/2] [UU]`, /dev/sdb + /dev/sdc |
+| Original file checksum | Transcribed in excerpts | 10 MiB test file; baseline SHA-256 check `OK` |
+| ext4 mounted | Transcribed in excerpts | /dev/md0 mounted as ext4 at /mnt/raid1-lab |
+| Simulated failure | Transcribed in excerpts | `[2/1] [_U]`, `clean, degraded`, failed /dev/sdb |
+| Recovery and checksum | Transcribed in excerpts; **original screenshot available offline** | `[2/2] [UU]`, /dev/sdc + /dev/sdd, failed=0, checksum `OK` |
+| Unedited terminal log | **Not collected** | Pending optional fresh log capture |
 
-### Screenshot note
+## Image files to upload
 
-The **original final screenshot** is retained in the offline documentation package. It may be added here as `03-recovered-raid1.png` if binary upload succeeds. Until then, do not treat an absent link as published evidence.
+1. `03-recovered-raid1.png` — original final checkpoint screenshot, provided in the offline evidence ZIP.
+2. `01-healthy-raid1.png` — original screenshot from the conversation, **only if recoverable**.
+3. `02-degraded-raid1.png` — original screenshot from the conversation, **only if recoverable**.
 
-Other original screenshots can be exported from the conversation or VM and then added to this directory. Do not fabricate image evidence, raw logs or SHA-256 hash strings.
+The listed PNGs are **not currently in this GitHub folder**. Do not present the transcript excerpts as original machine-generated logs or create artificial images to fill gaps. Repeating failure injection solely for screenshots is unnecessary.
 
-### Privacy
+## Optional live log from Ubuntu
 
-Before publishing additional assets, review for passwords, tokens, session cookies, system identifiers and unintended personal details. The already-reviewed lab screenshot contains a local username, hostname and RAID UUID but no visible credentials.
+```bash
+mkdir -p ~/aws-dco-evidence
+{
+  date -Is
+  cat /proc/mdstat
+  sudo mdadm --detail /dev/md0
+  df -hT /mnt/raid1-lab
+  sha256sum -c ~/raid1-before.sha256
+} | tee ~/aws-dco-evidence/recovery-verification.txt
+```
+
+If you run this, upload the unedited resulting file to `logs/recovery-verification.txt`. These commands are observational, not changes to RAID membership.
+
+**Privacy:** Check images and logs for secrets before making them public. The reviewed final screenshot exposes the local VM username, hostname and array UUID but no visible password or token.
