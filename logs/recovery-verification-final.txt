@@ -1,0 +1,42 @@
+Personalities : [raid1] 
+md0 : active raid1 sdd[2] sdc[1]
+      1057856 blocks super 1.2 [2/2] [UU]
+      
+unused devices: <none>
+NAME     SIZE TYPE  FSTYPE            MOUNTPOINTS
+loop0   66.8M loop  squashfs          /snap/core24/1643
+loop1      4K loop  squashfs          /snap/bare/5
+loop2   66.8M loop  squashfs          /snap/core24/2124
+loop3   14.2M loop  squashfs          /snap/desktop-security-center/188
+loop4  262.3M loop  squashfs          /snap/firefox/9036
+loop5   14.2M loop  squashfs          /snap/desktop-security-center/206
+loop6  273.7M loop  squashfs          /snap/firefox/8107
+loop7   12.7M loop  squashfs          /snap/firmware-updater/262
+loop8   16.5M loop  squashfs          /snap/firmware-updater/226
+loop9  606.1M loop  squashfs          /snap/gnome-46-2404/153
+loop10   402M loop  squashfs          /snap/mesa-2404/1839
+loop11  18.8M loop  squashfs          /snap/prompting-client/222
+loop12  11.8M loop  squashfs          /snap/snap-store/1390
+loop13  18.4M loop  squashfs          /snap/prompting-client/228
+loop14  91.7M loop  squashfs          /snap/gtk-common-themes/1535
+loop15   580K loop  squashfs          /snap/snapd-desktop-integration/361
+loop16    12M loop  squashfs          /snap/snap-store/1447
+loop17  44.7M loop  squashfs          /snap/snapd/28254
+loop18  49.3M loop  squashfs          /snap/snapd/26865
+loop19   395M loop  squashfs          /snap/mesa-2404/1165
+loop20   828K loop  squashfs          /snap/snapd-desktop-integration/391
+sda       30G disk                    
+├─sda1     1M part                    
+└─sda2    30G part  ext4              /
+sdb        1G disk  linux_raid_member 
+sdc        1G disk  linux_raid_member 
+└─md0      1G raid1 ext4              /mnt/raid1-lab
+sdd        1G disk  linux_raid_member 
+└─md0      1G raid1 ext4              /mnt/raid1-lab
+sr0     1024M rom                     
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/md0       ext4  983M   11M  905M   2% /mnt/raid1-lab
+/mnt/raid1-lab/raid1-test.bin: OK
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/md0       ext4  983M   11M  905M   2% /mnt/raid1-lab
+/mnt/raid1-lab/raid1-test.bin: OK
