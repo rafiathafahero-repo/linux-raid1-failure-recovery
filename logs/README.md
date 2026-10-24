@@ -11,7 +11,7 @@
 
 ## Provenance and completeness
 
-The participant generated `~/aws-dco-evidence/recovery-verification-final.txt` in Ubuntu by appending command output with `tee -a`, then pasted its contents into the conversation. The same console text was committed here. This is **not a verified byte-for-byte transfer from the Ubuntu filesystem**, and it is not a comprehensive historical terminal audit log.
+The participant generated a local Ubuntu verification text file by appending command output with `tee -a`, then pasted its contents into the conversation. The same console text was committed here. The reproducible examples in [commands.md](../commands.md) use a generic output directory rather than reproducing the original directory name. This is **not a verified byte-for-byte transfer from the Ubuntu filesystem**, and it is not a comprehensive historical terminal audit log.
 
 The final two filesystem/checksum pairs repeat because the same checks were appended again. They are retained rather than silently modifying the source material.
 
