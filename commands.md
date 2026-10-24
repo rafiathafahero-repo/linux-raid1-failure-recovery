@@ -62,21 +62,21 @@ sha256sum -c ~/raid1-before.sha256
 
 **Critical safety rule:** `/dev/sdc` was the *sole remaining good member* during the degraded interval and was not removed. `/dev/sdd` was the pre-checked expendable replacement disk. Rebuilding writes RAID metadata/data to the new member.
 
-## 6 — What actually captured the final evidence
+## 6 — Final evidence capture (equivalent commands)
 
-The participant created a text log under `~/aws-dco-evidence/`, starting with:
+The lab's final verification output was collected in a local text file using `tee`. The commands below illustrate the same capture method with a **generic evidence directory**; they are not presented as a verbatim export of the original shell history:
 
 ~~~bash
-mkdir -p ~/aws-dco-evidence
-cat /proc/mdstat | tee ~/aws-dco-evidence/recovery-verification-final.txt
+mkdir -p ~/raid1-evidence
+cat /proc/mdstat | tee ~/raid1-evidence/recovery-verification-final.txt
 ~~~
 
-Then appended:
+Additional checks can be appended:
 
 ~~~bash
-lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS | tee -a ~/aws-dco-evidence/recovery-verification-final.txt
-df -hT /mnt/raid1-lab | tee -a ~/aws-dco-evidence/recovery-verification-final.txt
-sha256sum -c ~/raid1-before.sha256 | tee -a ~/aws-dco-evidence/recovery-verification-final.txt
+lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS | tee -a ~/raid1-evidence/recovery-verification-final.txt
+df -hT /mnt/raid1-lab | tee -a ~/raid1-evidence/recovery-verification-final.txt
+sha256sum -c ~/raid1-before.sha256 | tee -a ~/raid1-evidence/recovery-verification-final.txt
 ~~~
 
 `tee -a` **appends**, so re-running commands resulted in duplicate final lines. The [uploaded text](logs/recovery-verification-final.txt) is the participant-provided console text copied into GitHub from the conversation. No root privileges were needed to collect those read-only checks.
@@ -91,7 +91,7 @@ sha256sum -c ~/raid1-before.sha256 | tee -a ~/aws-dco-evidence/recovery-verifica
   findmnt /mnt/raid1-lab
   df -hT /mnt/raid1-lab
   sha256sum -c ~/raid1-before.sha256
-} > ~/aws-dco-evidence/read-only-status-example.txt
+} > ~/raid1-evidence/read-only-status-example.txt
 ~~~
 
 This **example** would produce a newly captured read-only status file; it is not a replacement for the historical output.
