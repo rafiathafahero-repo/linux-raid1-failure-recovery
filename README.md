@@ -1,9 +1,8 @@
 # Linux RAID1 Failure Simulation & Recovery Lab
 
-**Hands-on Linux Storage Operations Portfolio**  
 **Date:** 24 October 2026 (WIB) · **Platform:** Ubuntu Linux on Oracle VirtualBox · **Tools:** mdadm, lsblk, ext4, sha256sum
 
-> **Scope and authenticity:** This is an **independent virtual-machine lab** using Linux **software RAID1**. The failure was deliberately injected with `mdadm --fail`. It is **not** a physical drive replacement, hardware RAID procedure, production incident, or AWS infrastructure operation.
+> **Scope and authenticity:** This is an **independent virtual-machine lab** using Linux **software RAID1**. The failure was deliberately injected with `mdadm --fail`. It is **not** a physical drive replacement, hardware RAID procedure, production incident, or work on production infrastructure.
 
 ## Project at a glance
 
@@ -118,8 +117,8 @@ The later evidence capture also reported an ext4 filesystem of 983M and 905M ava
 - No reboot/automatic RAID assembly, persistent mount configuration, SMART/BMC monitoring, controller diagnostics, physical drive swap or production change procedure was tested.
 - The removed `/dev/sdb` disk can still appear as `linux_raid_member` in `lsblk` because RAID metadata can remain even after removal from the active array. The active array membership is verified through `/proc/mdstat` and `mdadm --detail`.
 
-## Relevance to Data Center Operations
+## Practical takeaways
 
-The exercise demonstrates entry-level, **VM-based practice** in storage inspection, controlled failure analysis, member replacement, integrity validation and incident documentation. Real data center procedures additionally require safety protocols, ticket/change control, asset and component identification, hardware-specific diagnostics, escalation and post-replacement checks.
+This lab illustrates how to establish a storage baseline, recognize a degraded mirror, replace a simulated failed member, and verify both array health and sample-file integrity after recovery. Keeping the failure and recovery observations together also makes the procedure easier to review and reproduce.
 
-**CV-ready description:** Configured and troubleshot a Linux software RAID1 array using dedicated VirtualBox disks; simulated member failure, performed virtual disk replacement and recovery, and validated final array health and test-file integrity with mdadm and SHA-256.
+Physical-system recovery has additional requirements beyond this experiment, such as component identification, hardware diagnostics, safe handling procedures, change control, rebuild monitoring, and service validation. These were not performed in this virtual lab.
